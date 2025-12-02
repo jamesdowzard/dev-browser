@@ -4,8 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./client": "./src/client.ts",
-    "./types": "./src/types.ts"
+    "./client": "./src/client.ts"
   },
   "scripts": {
     "dev": "bun run --watch src/index.ts",

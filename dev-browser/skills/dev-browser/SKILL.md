@@ -17,12 +17,12 @@ You should make sure to run it in the background
 cd dev-browser && bun run start-server &
 ```
 
-The server runs on `http://localhost:9222` and keeps the browser alive between script runs.
+The server starts a Chromium browser and exposes a WebSocket endpoint (default: `ws://127.0.0.1:9222/...`). Clients connect directly to this endpoint.
 
 ## How It Works
 
-1. **Server** manages a persistent Chromium browser instance
-2. **Client** connects to the server and accesses named pages
+1. **Server** launches a persistent Chromium browser server
+2. **Client** connects directly via WebSocket and manages named pages locally
 3. **Pages persist** - you can run multiple scripts against the same page
 4. **State is preserved** - cookies, localStorage, DOM state all persist between runs
 
@@ -43,7 +43,7 @@ Always use the package name `dev-browser/client`.
 ```typescript
 import { connect } from "dev-browser/client";
 
-const client = await connect("http://localhost:9222");
+const client = await connect("ws://127.0.0.1:9222/<guid>");
 const page = await client.page("main"); // get or create a named page
 
 // Your automation code here
@@ -56,6 +56,8 @@ console.log({ title, url });
 
 // Don't close - keep page alive for next script
 ```
+
+**Note:** The WebSocket URL is printed when the server starts. Use the full URL from the server output.
 
 ### Key Principles
 
@@ -81,7 +83,7 @@ Follow this pattern for complex tasks:
 ```typescript
 import { connect } from "dev-browser/client";
 
-const client = await connect("http://localhost:9222");
+const client = await connect("ws://127.0.0.1:9222/<guid>");
 const page = await client.page("auth");
 
 await page.goto("https://example.com/login");
@@ -96,7 +98,7 @@ console.log({ url: page.url(), hasLoginForm });
 ```typescript
 import { connect } from "dev-browser/client";
 
-const client = await connect("http://localhost:9222");
+const client = await connect("ws://127.0.0.1:9222/<guid>");
 const page = await client.page("auth");
 
 await page.fill('input[name="email"]', "user@example.com");
@@ -115,7 +117,7 @@ console.log({ url, isLoggedIn });
 ```typescript
 import { connect } from "dev-browser/client";
 
-const client = await connect("http://localhost:9222");
+const client = await connect("ws://127.0.0.1:9222/<guid>");
 const page = await client.page("auth");
 
 const welcomeText = await page.textContent("h1");
@@ -187,7 +189,7 @@ const result = await page.evaluate(() => {
 ## Managing Pages
 
 ```typescript
-// List all pages
+// List all pages (local to this client connection)
 const pages = await client.list();
 console.log(pages); // ["main", "auth", "checkout"]
 
@@ -214,7 +216,7 @@ If a script fails, the page state is preserved. You can:
 // Recovery script - check current state (save as dev-browser/tmp/debug-state.ts)
 import { connect } from "dev-browser/client";
 
-const client = await connect("http://localhost:9222");
+const client = await connect("ws://127.0.0.1:9222/<guid>");
 const page = await client.page("main");
 
 await page.screenshot({ path: "dev-browser/tmp/debug.png" });
