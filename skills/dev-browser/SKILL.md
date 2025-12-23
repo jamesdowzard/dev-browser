@@ -100,6 +100,11 @@ const text = await page.evaluate(() => {
   const el: HTMLElement = document.body; // Type annotation breaks in browser!
   return el.innerText;
 });
+
+## Scraping Data
+
+If the user is asking you to extract large amounts of data. Be smart about it. Often directly interacting with the dom is not the most
+optimal way to do this. Instead you should consider tracing network calls and replaying them to extract data from apis.
 ```
 
 ## Client API

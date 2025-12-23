@@ -203,12 +203,7 @@ describe("CDPRouter", () => {
     it("should ignore events for unknown tabs", () => {
       const sendMessage = vi.fn();
 
-      cdpRouter.handleDebuggerEvent(
-        { tabId: 999 },
-        "Page.loadEventFired",
-        {},
-        sendMessage
-      );
+      cdpRouter.handleDebuggerEvent({ tabId: 999 }, "Page.loadEventFired", {}, sendMessage);
 
       expect(sendMessage).not.toHaveBeenCalled();
     });
