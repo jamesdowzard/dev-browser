@@ -42,8 +42,7 @@ Connects to user's existing Chrome browser. Use this when:
 cd skills/dev-browser && npm i && npm run start-extension &
 ```
 
-Wait for `Waiting for extension to connect...`
-
+Wait for `Waiting for extension to connect...` followed by `Extension connected` in the console. To know that a client has connected and the browser is ready to be controlled.
 **Workflow:**
 
 1. Scripts call `client.page("name")` just like the normal mode to create new pages / connect to existing ones.
