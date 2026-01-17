@@ -1,4 +1,12 @@
 {
-  "features": {},
-  "last_updated": null
+  "features": {
+    "chrome-profile-workspaces": {
+      "branch": "feature/chrome-profile-workspaces",
+      "worktree": ".worktrees/chrome-profile-workspaces",
+      "status": "in_progress",
+      "created": "2026-01-18T09:00:00Z",
+      "description": "Add Chrome profile workspace support with off-screen windows"
+    }
+  },
+  "last_updated": "2026-01-18T09:00:00Z"
 }
