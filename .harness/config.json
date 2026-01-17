@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "repo_name": "dev-browser",
+  "default_branch": "main",
+  "worktree_base": ".worktrees",
+  "parallel_limit": 3,
+  "auto_cleanup": true
+}
