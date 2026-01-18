@@ -5,8 +5,12 @@ import type {
   ListPagesResponse,
   ServerInfoResponse,
   ViewportSize,
-} from "./types";
-import { getSnapshotScript } from "./snapshot/browser-script";
+  ListWorkspacesResponse,
+  SwitchWorkspaceResponse,
+  CurrentWorkspaceResponse,
+  WorkspaceState,
+} from "./types.js";
+import { getSnapshotScript } from "./snapshot/browser-script.js";
 
 /**
  * Options for waiting for page load
@@ -210,8 +214,10 @@ async function getPageLoadState(page: Page): Promise<PageLoadState> {
 /** Server mode information */
 export interface ServerInfo {
   wsEndpoint: string;
-  mode: "launch" | "extension";
+  mode: "launch" | "extension" | "workspaces";
   extensionConnected?: boolean;
+  /** Current workspace name (only in workspaces mode) */
+  workspace?: string | null;
 }
 
 /**
@@ -242,6 +248,32 @@ export interface DevBrowserClient {
    * Get server information including mode and extension connection status.
    */
   getServerInfo: () => Promise<ServerInfo>;
+
+  // ============================================================================
+  // Workspace Methods (only available in workspaces mode)
+  // ============================================================================
+
+  /**
+   * List all available workspaces and their states.
+   * Only available when connected to a workspace server.
+   */
+  listWorkspaces: () => Promise<WorkspaceState[]>;
+  /**
+   * Get the currently active workspace.
+   * Only available when connected to a workspace server.
+   */
+  getCurrentWorkspace: () => Promise<CurrentWorkspaceResponse>;
+  /**
+   * Switch to a different workspace (Chrome profile).
+   * Launches Chrome with the specified profile if not already running.
+   * Only available when connected to a workspace server.
+   */
+  switchWorkspace: (workspace: string) => Promise<SwitchWorkspaceResponse>;
+  /**
+   * Stop a workspace (closes Chrome instance).
+   * Only available when connected to a workspace server.
+   */
+  stopWorkspace: (workspace: string) => Promise<void>;
 }
 
 export async function connect(serverUrl = "http://localhost:9222"): Promise<DevBrowserClient> {
@@ -463,12 +495,79 @@ export async function connect(serverUrl = "http://localhost:9222"): Promise<DevB
         wsEndpoint: string;
         mode?: string;
         extensionConnected?: boolean;
+        workspace?: string | null;
       };
       return {
         wsEndpoint: info.wsEndpoint,
-        mode: (info.mode as "launch" | "extension") ?? "launch",
+        mode: (info.mode as "launch" | "extension" | "workspaces") ?? "launch",
         extensionConnected: info.extensionConnected,
+        workspace: info.workspace,
       };
+    },
+
+    // ========================================================================
+    // Workspace Methods
+    // ========================================================================
+
+    async listWorkspaces(): Promise<WorkspaceState[]> {
+      const res = await fetch(`${serverUrl}/workspaces`);
+      if (!res.ok) {
+        throw new Error(`Failed to list workspaces: ${await res.text()}`);
+      }
+      const data = (await res.json()) as ListWorkspacesResponse;
+      return data.workspaces;
+    },
+
+    async getCurrentWorkspace(): Promise<CurrentWorkspaceResponse> {
+      const res = await fetch(`${serverUrl}/workspace/current`);
+      if (!res.ok) {
+        throw new Error(`Failed to get current workspace: ${await res.text()}`);
+      }
+      return (await res.json()) as CurrentWorkspaceResponse;
+    },
+
+    async switchWorkspace(workspace: string): Promise<SwitchWorkspaceResponse> {
+      const res = await fetch(`${serverUrl}/workspace/switch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspace }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to switch workspace: ${await res.text()}`);
+      }
+
+      // Clear existing browser connection since we're switching Chrome instances
+      if (browser) {
+        try {
+          await browser.close();
+        } catch {
+          // Ignore close errors
+        }
+        browser = null;
+      }
+
+      return (await res.json()) as SwitchWorkspaceResponse;
+    },
+
+    async stopWorkspace(workspace: string): Promise<void> {
+      const res = await fetch(`${serverUrl}/workspace/stop`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspace }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to stop workspace: ${await res.text()}`);
+      }
+
+      // Clear browser connection if we stopped the current workspace
+      if (browser) {
+        try {
+          await browser.close();
+        } catch {
+          // Ignore close errors
+        }
+        browser = null;
+      }
     },
   };
 }
