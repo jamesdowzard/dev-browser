@@ -13,6 +13,10 @@ import type {
 
 export type { ServeOptions, GetPageResponse, ListPagesResponse, ServerInfoResponse };
 
+// Re-export workspace server for Chrome profile support
+export { serveWorkspaces } from "./workspace-server.js";
+export type { WorkspaceServer, WorkspaceServerOptions } from "./workspace-server.js";
+
 export interface DevBrowserServer {
   wsEndpoint: string;
   port: number;

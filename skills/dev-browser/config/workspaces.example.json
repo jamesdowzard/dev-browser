@@ -1,0 +1,13 @@
+{
+  "workspaces": {
+    "personal": {
+      "profileDirectory": "Default",
+      "port": 9230
+    },
+    "work": {
+      "profileDirectory": "James-Work",
+      "port": 9231
+    }
+  },
+  "defaultWorkspace": "personal"
+}
